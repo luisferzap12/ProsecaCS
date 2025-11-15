@@ -25,7 +25,7 @@ namespace Proseca.Api.Data
             await CheckFincaAsync(); //encargado de hacer el chequeo cada vez q se ejecute la app
             await CheckRolesAsync(); //Validar roles de usuario
             await CheckUserAsync("123456","Luis","Zapata","zapata@gmail.com","3113476964",UserType.Admin);
-           
+            
            // await CheckUserAsync("123456", "Samuel", "Angulo", "samuel@gmail.com", "3117509186", UserType.Admin);
 
 
