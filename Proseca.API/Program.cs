@@ -79,10 +79,10 @@ builder.Services.AddSwaggerGen(c =>
 
 
 
-builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name=DefaultConnetion"));
+builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddTransient<SeedDb>();//inyeccion de dependencia
 
-//condiones para contraseña
+//condiones para contraseï¿½a
 builder.Services.AddIdentity<User, IdentityRole>(x =>
 
 {
