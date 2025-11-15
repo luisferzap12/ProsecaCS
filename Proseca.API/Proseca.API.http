@@ -1,0 +1,6 @@
+@Proseca.API_HostAddress = http://localhost:5181
+
+GET {{Proseca.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

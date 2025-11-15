@@ -1,0 +1,139 @@
+﻿@using Proseca.Shared.Entidades
+@inject SweetAlertService swal
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation"></NavigationLock>
+
+
+<EditForm EditContext="editContext">
+
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+
+        <label>Nombre de la finca</label>
+        <div>
+
+            <InputText width="10" @bind-Value="Finca.Nombre" />
+
+        </div>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label>Cantidad de animales</label>
+        <div>
+
+            <InputNumber @bind-Value="Finca.Cantidad" />
+
+        </div>
+
+    </div>
+
+
+
+    <button class="btn btn-primary" type="button" @onclick="OnSubmit">Guardar</button>
+    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
+
+
+</EditForm>
+
+
+
+@code {
+    private EditContext editContext = null;
+
+    protected override void OnInitialized()
+
+    {
+        editContext = new(Finca);
+    }
+
+
+    [EditorRequired]
+
+    [Parameter]
+
+    public Finca Finca { get; set; }
+
+    [EditorRequired]
+
+    [Parameter]
+
+    public EventCallback OnSubmit { get; set; }
+
+
+
+
+
+    [EditorRequired]
+
+    [Parameter]
+
+    public EventCallback ReturnAction { get; set; }
+
+
+
+    public bool FormPostedSuccessfully { get; set; } = false;
+
+
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+
+    {
+
+        Console.WriteLine("guardando data");
+
+        var formWasEdited = editContext.IsModified();
+
+
+
+        if (!formWasEdited)
+
+        {
+
+            return;
+
+        }
+
+
+
+        if (FormPostedSuccessfully)
+
+        {
+
+            return;
+
+        }
+
+
+
+        var result = await swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Deseas abandonar la página y perder los cambios?",
+                Icon = SweetAlertIcon.Warning,
+                ShowCancelButton = true
+            });
+
+
+
+        var confirm = !string.IsNullOrEmpty(result.Value);
+
+
+
+        if (confirm)
+
+        {
+
+            return;
+
+        }
+
+
+
+        context.PreventNavigation();
+
+    }
+
+}

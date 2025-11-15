@@ -1,0 +1,133 @@
+﻿@page "/Animales"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Proseca.Shared.Entidades
+@using Proseca.WEB.Repositories
+@using Proseca.WEB.Shared 
+@using Microsoft.AspNetCore.Authorization
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService swal
+@inject IAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize(Roles ="Admin, User")]
+
+<h3>Animales</h3>
+<div class="mb-3">
+    <a class="btn btn-create" href="/animales/Create">Crear Animal</a>
+</div>
+
+<GenericList MyList="Animales">
+    <Body>
+        <table class="table table-striped table-bordered custom-table">
+            <thead>
+                <tr>
+                    <th>Chapeta</th>
+                    <th>Nombre</th>
+                    <th>Imagen</th>
+                    <th>Sexo</th>
+                    <th>Fecha de Nacimiento</th>
+                    <th>Padre</th>
+                    <th>Madre</th>
+                    <th>Raza</th>
+                    <th>Peso</th>
+                    <th>Color</th>
+                    @if (IsAdmin)
+                    {
+                        <th>Acciones</th>
+                    }
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var Animal in Animales)
+                {
+                    <tr>
+                        <td>@Animal.Chapeta</td>
+                        <td>@Animal.Nombre</td>
+                        <td>
+                            <div style="height:150px; width:150px;">
+                                <img style="width:100%; height:100%" src="@Animal.ImagenUrl" />
+                            </div>
+                        </td>
+                        <td>@Animal.Sexo</td>
+                        <td>@Animal.FechaN</td>
+                        <td>@Animal.Padre</td>
+                        <td>@Animal.Madre</td>
+                        <td>@Animal.Raza</td>
+                        <td>@Animal.peso</td>
+                        <td>@Animal.Color</td>
+                        <td>
+                            @if (IsAdmin)
+                            {
+                                <a href="/Animales/edit/@Animal.Id" class="btn btn-warning">Editar</a>
+                                <button class="btn btn-danger" @onclick="@(() => DeleteAsync(Animal))">Borrar</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </Body>
+</GenericList>
+
+@code {
+    public List<Animal> Animales { get; set; } = new List<Animal>();
+    private bool IsAdmin { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        var responseHppt = await repository.GetAsync<List<Animal>>("/api/Animales");
+        Animales = responseHppt.Response!;
+    }
+
+    private async Task DeleteAsync(Animal Animal)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Esta seguro que quieres borrar el registro?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHTTP = await repository.DeleteAsync<Animal>($"api/Animales/{Animal.Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var mensajeError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
+    }
+}
+
+<style>
+    
+</style>

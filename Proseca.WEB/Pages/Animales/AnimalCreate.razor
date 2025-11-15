@@ -1,0 +1,51 @@
+﻿@page "/animales/create"
+
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+
+
+<h3>Crear Animal</h3>
+
+<AnimalForm @ref="animalForm" Animal="Animal" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    public Animal Animal = new();
+
+    public AnimalForm animalForm;
+
+    private async Task Create()
+
+    {
+
+        var responseHttp = await repository.PostAsync("/api/Animales", Animal);
+
+        if (responseHttp.Error)
+
+        {
+
+            var mensaje = await responseHttp.GetErrorMessageAsync();
+
+            //await sweetAlertService.FireAsync("Error", mensaje);
+
+            return;
+
+        }
+
+        animalForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/Animales");
+
+    }
+
+    private void Return()
+
+    {
+        Console.WriteLine("Regresar");
+
+        navigationManager.NavigateTo("/Animales");
+
+    }
+}

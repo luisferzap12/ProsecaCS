@@ -1,0 +1,49 @@
+﻿@page "/Reproducciones/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Reproduccion Create</h3>
+
+<ReproduccionForm @ref="ReproduccionForm" Reproduccion="Reproduccion" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    public Reproduccion Reproduccion = new();
+
+    public ReproduccionForm ReproduccionForm;
+
+    private async Task Create()
+
+    {
+
+        var responseHttp = await repository.PostAsync("/api/Reproducciones", Reproduccion);
+
+        if (responseHttp.Error)
+
+        {
+
+            var mensaje = await responseHttp.GetErrorMessageAsync();
+
+            await sweetAlertService.FireAsync("Error", mensaje);
+
+            return;
+
+        }
+
+        ReproduccionForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/Reproducciones");
+
+    }
+
+    private void Return()
+
+    {
+
+        Console.WriteLine("Regresar");
+
+        navigationManager.NavigateTo("/Reproducciones");
+
+    }
+}

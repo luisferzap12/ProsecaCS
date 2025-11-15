@@ -1,0 +1,49 @@
+﻿@page "/EventosDeSalud/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Evento Create</h3>
+
+<EventoDeSaludForm @ref="EventoDeSaludForm" EventoDeSalud="EventoDeSalud" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    public EventoDeSalud EventoDeSalud = new();
+
+    public EventoDeSaludForm EventoDeSaludForm;
+
+    private async Task Create()
+
+    {
+
+        var responseHttp = await repository.PostAsync("/api/EventosDeSalud", EventoDeSalud);
+
+        if (responseHttp.Error)
+
+        {
+
+            var mensaje = await responseHttp.GetErrorMessageAsync();
+
+            await sweetAlertService.FireAsync("Error", mensaje);
+
+            return;
+
+        }
+
+        EventoDeSaludForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/EventosDeSalud");
+
+    }
+
+    private void Return()
+
+    {
+
+        Console.WriteLine("Regresar");
+
+        navigationManager.NavigateTo("/EventosDeSalud");
+
+    }
+}

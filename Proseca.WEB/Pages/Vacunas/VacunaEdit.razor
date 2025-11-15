@@ -1,0 +1,67 @@
+﻿@page "/Vacunas/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+
+<h3>Editar Vacuna</h3>
+
+@if (Vacuna is null)
+{
+    <div class="spinner" />
+}
+else
+{
+    <VacunaForm @ref="VacunaForm" Vacuna="Vacuna" OnSubmit="Edit" ReturnAction="Return" />
+}
+
+@code {
+    private Vacuna Vacuna;
+    private VacunaForm VacunaForm;
+
+    [Parameter]
+    public int Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHTTP = await repository.GetAsync<Vacuna>($"/api/Vacunas/{Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("Vacunas");
+            }
+            else
+            {
+                var messageError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            Vacuna = responseHTTP.Response;
+        }
+    }
+
+    private async Task Edit()
+    {
+        var responseHTTP = await repository.PutAsync("/api/Vacunas", Vacuna);
+
+        if (responseHTTP.Error)
+        {
+            var mensajeError = await responseHTTP.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+
+            navigationManager.NavigateTo("/Vacunas");
+        }
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/Vacunas");
+    }
+}

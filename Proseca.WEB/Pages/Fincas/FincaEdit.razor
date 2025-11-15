@@ -1,0 +1,67 @@
+﻿@page "/Fincas/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+
+<h3>Editar Evento</h3>
+
+@if (Finca is null)
+{
+    <div class="spinner" />
+}
+else
+{
+    <FincaForm @ref="FincaForm" Finca="Finca" OnSubmit="Edit" ReturnAction="Return" />
+}
+
+@code {
+    private Finca Finca;
+    private FincaForm FincaForm;
+
+    [Parameter]
+    public int Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHTTP = await repository.GetAsync<Finca>($"/api/Fincas/{Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("Fincas");
+            }
+            else
+            {
+                var messageError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            Finca = responseHTTP.Response;
+        }
+    }
+
+    private async Task Edit()
+    {
+        var responseHTTP = await repository.PutAsync("/api/hackatones", Finca);
+
+        if (responseHTTP.Error)
+        {
+            var mensajeError = await responseHTTP.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+
+            navigationManager.NavigateTo("/Fincas");
+        }
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/Fincas");
+    }
+}

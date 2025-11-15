@@ -1,0 +1,49 @@
+﻿@page "/ProduccionesLeche/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Craer Produccion de Leche</h3>
+
+<ProduccionLecheForm @ref="ProduccionLecheForm" ProduccionLeche="ProduccionLeche" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    public ProduccionLeche ProduccionLeche = new();
+
+    public ProduccionLecheForm ProduccionLecheForm;
+
+    private async Task Create()
+
+    {
+
+        var responseHttp = await repository.PostAsync("/api/ProduccionesDeLeche", ProduccionLeche);
+
+        if (responseHttp.Error)
+
+        {
+
+            var mensaje = await responseHttp.GetErrorMessageAsync();
+
+            await sweetAlertService.FireAsync("Error", mensaje);
+
+            return;
+
+        }
+
+        ProduccionLecheForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/ProduccionesLeche");
+
+    }
+
+    private void Return()
+
+    {
+
+        Console.WriteLine("Regresar");
+
+        navigationManager.NavigateTo("/ProduccionesLeche");
+
+    }
+}

@@ -1,0 +1,67 @@
+﻿@page "/ProduccionesLeche/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+
+<h3>Editar Produccion de Leche</h3>
+
+@if (ProduccionLeche is null)
+{
+    <div class="spinner" />
+}
+else
+{
+    <ProduccionLecheForm @ref="ProduccionLecheForm" ProduccionLeche="ProduccionLeche" OnSubmit="Edit" ReturnAction="Return" />
+}
+
+@code {
+    private ProduccionLeche ProduccionLeche;
+    private ProduccionLecheForm ProduccionLecheForm;
+
+    [Parameter]
+    public int Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHTTP = await repository.GetAsync<ProduccionLeche>($"/api/ProduccionesDeLeche/{Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("ProduccionesLeche");
+            }
+            else
+            {
+                var messageError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            ProduccionLeche = responseHTTP.Response;
+        }
+    }
+
+    private async Task Edit()
+    {
+        var responseHTTP = await repository.PutAsync("/api/ProduccionesDeLeche", ProduccionLeche);
+
+        if (responseHTTP.Error)
+        {
+            var mensajeError = await responseHTTP.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+
+            navigationManager.NavigateTo("/ProduccionesLeche");
+        }
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/ProduccionesLeche");
+    }
+}

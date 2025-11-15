@@ -1,0 +1,140 @@
+﻿@page "/ProduccionesLeche"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Proseca.Shared.Entidades
+@using Proseca.WEB.Repositories
+@using Proseca.WEB.Shared
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService swal
+@inject IAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+
+<h3>Producciones leche</h3>
+<div class="mb-3">
+
+    <a class="btn btn-create" href="/ProduccionesLeche/Create"> Crear Produccion de leche</a>
+   
+
+</div>
+
+<GenericList MyList="ProduccionesLeche">
+
+    <Body>
+        <table class="table table-striped table-bordered custom-table">
+
+            <thead>
+
+                <tr>
+                    <th>Cantidad de Leche</th>
+                    <th>Fecha Ultima Producción</th>
+               
+                    @if (IsAdmin)
+                    {
+                        <th>Acciones</th>
+                    }
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+                @foreach (var ProduccionLeche in ProduccionesLeche)
+                {
+                    <tr>
+                        <td>
+                            @*Fila*@
+                            @ProduccionLeche.CantidadLeche
+                        </td>
+
+                        <td>
+                            @ProduccionLeche.FechaUltimaProduccion
+                        </td>
+
+
+                        <td>
+                            @if (IsAdmin)
+                            {
+                                <a href="/ProduccionesLeche/edit/@ProduccionLeche.Id" class="btn btn-warning">Editar</a>
+                                <button class="btn btn-danger" @onclick=@(() =>DeleteAsync(ProduccionLeche))>Borrar</button>
+
+                            }
+                           
+                        </td>
+
+
+                    </tr>
+                }
+            </tbody>
+
+            </table>
+
+
+
+    </Body>
+
+
+
+
+</GenericList>
+
+
+
+@code {
+
+    public List<ProduccionLeche> ProduccionesLeche { get; set; } = new List<ProduccionLeche>();
+    private bool IsAdmin { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+           var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+           var user = authState.User;
+           IsAdmin = user.IsInRole("Admin");
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        var responseHppt = await repository.GetAsync<List<ProduccionLeche>>("/api/ProduccionesDeLeche");
+        ProduccionesLeche = responseHppt.Response!;
+    }
+
+    private async Task DeleteAsync(ProduccionLeche ProduccionLeche)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Esta seguro que quieres borrar el registro?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true
+            });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHTTP = await repository.DeleteAsync<ProduccionLeche>($"api/ProduccionesDeLeche/{ProduccionLeche.Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var mensajeError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
+    }
+}

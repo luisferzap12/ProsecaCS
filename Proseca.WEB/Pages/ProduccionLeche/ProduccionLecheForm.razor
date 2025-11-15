@@ -1,0 +1,166 @@
+﻿@using Proseca.Shared.Entidades
+@inject SweetAlertService swal
+@inject IRepository repository
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation"></NavigationLock>
+
+
+<EditForm EditContext="editContext">
+
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+        <label>Animal</label>
+        <InputSelect class="form-control" style="width: 200px;" @bind-Value="ProduccionLeche.AnimalId">
+            <option value="">Seleccionar Animal</option> <!-- Opción por defecto -->
+            @foreach (var Animal in Animales)
+            {
+                <option value="@Animal.Id">@Animal.Nombre</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+
+        <label>Cantidad de leche en litros</label>
+        <div>
+
+            <InputNumber class="form-control" style="width: 200px;" @bind-Value="ProduccionLeche.CantidadLeche" />
+
+        </div>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label>Fecha Ultima Produccion</label>
+        <div>
+
+            <InputDate @bind-Value="ProduccionLeche.FechaUltimaProduccion" class="form-control" style="max-width:200px" />
+
+        </div>
+
+    </div>
+
+
+
+    <button class="btn btn-primary" type="button" @onclick="OnSubmit">Guardar</button>
+    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
+
+
+</EditForm>
+
+
+
+@code {
+
+
+    public List<Animal> Animales { get; set; } = new List<Animal>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new(ProduccionLeche);
+        ProduccionLeche.FechaUltimaProduccion = DateTime.Parse("2001-01-01");
+
+        var responseHppt = await repository.GetAsync<List<Animal>>("/api/Animales");
+        Animales = responseHppt.Response!.ToList();
+
+    }
+
+
+
+    private EditContext editContext = null;
+
+
+    protected override void OnInitialized()
+
+    {
+
+        editContext = new(ProduccionLeche);
+    }
+
+    [EditorRequired]
+
+    [Parameter]
+
+    public ProduccionLeche ProduccionLeche { get; set; }
+
+    [EditorRequired]
+
+    [Parameter]
+
+    public EventCallback OnSubmit { get; set; }
+
+
+
+
+
+    [EditorRequired]
+
+    [Parameter]
+
+    public EventCallback ReturnAction { get; set; }
+
+
+
+    public bool FormPostedSuccessfully { get; set; } = false;
+
+
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+
+    {
+
+        Console.WriteLine("guardando data");
+
+        var formWasEdited = editContext.IsModified();
+
+
+
+        if (!formWasEdited)
+
+        {
+
+            return;
+
+        }
+
+
+
+        if (FormPostedSuccessfully)
+
+        {
+
+            return;
+
+        }
+
+
+
+        var result = await swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Deseas abandonar la página y perder los cambios?",
+                Icon = SweetAlertIcon.Warning,
+                ShowCancelButton = true
+            });
+
+
+
+        var confirm = !string.IsNullOrEmpty(result.Value);
+
+
+        if (confirm)
+
+        {
+
+            return;
+
+        }
+
+
+        context.PreventNavigation();
+
+    }
+}

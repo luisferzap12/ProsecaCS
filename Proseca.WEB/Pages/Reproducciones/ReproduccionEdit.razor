@@ -1,0 +1,67 @@
+﻿@page "/Reproducciones/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+
+<h3>Editar Reproduccion</h3>
+
+@if (Reproduccion is null)
+{
+    <div class="spinner" />
+}
+else
+{
+    <ReproduccionForm @ref="ReproduccionForm" Reproduccion="Reproduccion" OnSubmit="Edit" ReturnAction="Return" />
+}
+
+@code {
+    private Reproduccion Reproduccion;
+    private ReproduccionForm ReproduccionForm;
+
+    [Parameter]
+    public int Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHTTP = await repository.GetAsync<Reproduccion>($"/api/Reproducciones/{Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("Reproducciones");
+            }
+            else
+            {
+                var messageError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            Reproduccion = responseHTTP.Response;
+        }
+    }
+
+    private async Task Edit()
+    {
+        var responseHTTP = await repository.PutAsync("/api/Reproducciones", Reproduccion);
+
+        if (responseHTTP.Error)
+        {
+            var mensajeError = await responseHTTP.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+
+            navigationManager.NavigateTo("/Reproducciones");
+        }
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/Reproducciones");
+    }
+}

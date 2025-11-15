@@ -1,0 +1,49 @@
+﻿@page "/Vacunas/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Vacuna Create</h3>
+
+<VacunaForm @ref="VacunaForm" Vacuna="Vacuna" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    public Vacuna Vacuna = new();
+
+    public VacunaForm VacunaForm;
+
+    private async Task Create()
+
+    {
+
+        var responseHttp = await repository.PostAsync("/api/Vacunas", Vacuna);
+
+        if (responseHttp.Error)
+
+        {
+
+            var mensaje = await responseHttp.GetErrorMessageAsync();
+
+            await sweetAlertService.FireAsync("Error", mensaje);
+
+            return;
+
+        }
+
+        VacunaForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/Vacunas");
+
+    }
+
+    private void Return()
+
+    {
+
+        Console.WriteLine("Regresar");
+
+        navigationManager.NavigateTo("/Vacunas");
+
+    }
+}

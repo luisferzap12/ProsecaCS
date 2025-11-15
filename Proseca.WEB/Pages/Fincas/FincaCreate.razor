@@ -1,0 +1,49 @@
+﻿@page "/Fincas/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Finca Create</h3>
+
+<FincaForm @ref="FincaForm" Finca="Finca" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    public Finca Finca = new();
+
+    public FincaForm FincaForm;
+
+    private async Task Create()
+
+    {
+
+        var responseHttp = await repository.PostAsync("/api/Fincas", Finca);
+
+        if (responseHttp.Error)
+
+        {
+
+            var mensaje = await responseHttp.GetErrorMessageAsync();
+
+            await sweetAlertService.FireAsync("Error", mensaje);
+
+            return;
+
+        }
+
+        FincaForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/Fincas");
+
+    }
+
+    private void Return()
+
+    {
+
+        Console.WriteLine("Regresar");
+
+        navigationManager.NavigateTo("/Fincas");
+
+    }
+}
